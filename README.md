@@ -3,7 +3,7 @@ PHP-based Software License Server
 
 A high-performance license server system service for creating and managing products, major versions, and software licenses for the purpose of selling installable software products.  Comes with a SDK and command-line tool.  Works anywhere that PHP runs.
 
-In short, use this software when you need a robust license server but want to just get back to writing software.
+For when you need a robust license server but want to just get back to writing software.
 
 See it in action:
 
