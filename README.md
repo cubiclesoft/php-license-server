@@ -15,7 +15,7 @@ See it in action:
 Features
 --------
 
-* Generate unique [encrypted serial numbers]() on a per-major version basis.  Each encrypted serial number contains:  Date created or date the license expires, product ID, product classification, major and minor version numbers, per-application custom bits (e.g. a hardware hash, digital/physical copy, purchase avenue, single/multi-user license), and per-user hash checksum bits.
+* Generate unique [encrypted serial numbers](https://cubicspot.blogspot.com/2020/03/adventuring-deeply-into-software-serial.html) on a per-major version basis.  Each encrypted serial number contains:  Date created or date the license expires, product ID, product classification, major and minor version numbers, per-application custom bits (e.g. a hardware hash, digital/physical copy, purchase avenue, single/multi-user license), and per-user hash checksum bits.
 * Quickly and easily manage products (up to 1,024), major versions (up to 256 per product), product classes (up to 16 per major version - e.g. Standard, Pro, Enterprise), and software licenses (unlimited).
 * Supports per-license activation limits, download limits, and revoking the occasional rogue license.
 * Supports various common customizations (e.g. storing an external order number alongside each license, setting the character encoding scheme for each major version's serials, etc).
