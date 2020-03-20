@@ -1,6 +1,6 @@
 <?php
 	// CubicleSoft PHP GenericServer class.
-	// (C) 2018 CubicleSoft.  All Rights Reserved.
+	// (C) 2020 CubicleSoft.  All Rights Reserved.
 
 	// Make sure PHP doesn't introduce weird limitations.
 	ini_set("memory_limit", "-1");
@@ -8,8 +8,8 @@
 
 	class GenericServer
 	{
-		private $debug, $fp, $ssl, $initclients, $clients, $nextclientid;
-		private $defaulttimeout, $defaultclienttimeout;
+		protected $debug, $fp, $ssl, $initclients, $clients, $nextclientid;
+		protected $defaulttimeout, $defaultclienttimeout, $lasttimeoutcheck;
 
 		public function __construct()
 		{
@@ -27,6 +27,7 @@
 
 			$this->defaulttimeout = 30;
 			$this->defaultclienttimeout = 30;
+			$this->lasttimeoutcheck = microtime(true);
 		}
 
 		public function __destruct()
@@ -126,23 +127,22 @@
 
 		public function UpdateStreamsAndTimeout($prefix, &$timeout, &$readfps, &$writefps)
 		{
-			if ($this->fp !== false)  $readfps[$prefix . "echo_s"] = $this->fp;
+			if ($this->fp !== false)  $readfps[$prefix . "gs_s"] = $this->fp;
 			if ($timeout === false || $timeout > $this->defaulttimeout)  $timeout = $this->defaulttimeout;
 
-			$ts = microtime(true);
 			foreach ($this->initclients as $id => $client)
 			{
 				if ($client->mode === "init")
 				{
-					$readfps[$prefix . "echo_c_" . $id] = $client->fp;
+					$readfps[$prefix . "gs_c_" . $id] = $client->fp;
 					if ($timeout > 1)  $timeout = 1;
 				}
 			}
 			foreach ($this->clients as $id => $client)
 			{
-				$readfps[$prefix . "echo_c_" . $id] = $client->fp;
+				$readfps[$prefix . "gs_c_" . $id] = $client->fp;
 
-				if ($client->writedata !== "")  $writefps[$prefix . "echo_c_" . $id] = $client->fp;
+				if ($client->writedata !== "")  $writefps[$prefix . "gs_c_" . $id] = $client->fp;
 			}
 		}
 
@@ -201,7 +201,7 @@
 			return true;
 		}
 
-		public function InitNewClient()
+		public function InitNewClient($fp)
 		{
 			$client = new stdClass();
 
@@ -212,8 +212,8 @@
 			$client->recvsize = 0;
 			$client->sendsize = 0;
 			$client->lastts = microtime(true);
-			$client->fp = false;
-			$client->ipaddr = false;
+			$client->fp = $fp;
+			$client->ipaddr = stream_socket_get_name($fp, true);
 
 			$this->initclients[$this->nextclientid] = $client;
 
@@ -224,21 +224,19 @@
 
 		protected function HandleNewConnections(&$readfps, &$writefps)
 		{
-			if (isset($readfps["echo_s"]))
+			if (isset($readfps["gs_s"]))
 			{
 				while (($fp = @stream_socket_accept($this->fp, 0)) !== false)
 				{
 					// Enable non-blocking mode.
 					stream_set_blocking($fp, 0);
 
-					$client = $this->InitNewClient();
-					$client->fp = $fp;
-					$client->ipaddr = stream_socket_get_name($fp, true);
+					$client = $this->InitNewClient($fp);
 
 					if ($this->debug)  echo "Accepted new connection from '" . $client->ipaddr . "'.  Client ID " . $client->id . ".\n";
 				}
 
-				unset($readfps["echo_s"]);
+				unset($readfps["gs_s"]);
 			}
 		}
 
@@ -277,7 +275,7 @@
 			if ($client->writedata !== "")
 			{
 				// Serious bug in PHP core for non-blocking SSL sockets:  https://bugs.php.net/bug.php?id=72333
-				if ($this->ssl)
+				if ($this->ssl && version_compare(PHP_VERSION, "7.1.4") <= 0)
 				{
 					// This is a huge hack that has a pretty good chance of blocking on the socket.
 					// Peeling off up to just 4KB at a time helps to minimize that possibility.  It's better than guaranteed failure of the socket though.
@@ -297,6 +295,8 @@
 
 				$client->sendsize += $result;
 
+				$this->UpdateClientState($client->id);
+
 				if (strlen($client->writedata))  return array("success" => false, "error" => self::GSTranslate("Non-blocking write did not send all data."), "errorcode" => "no_data");
 			}
 
@@ -305,7 +305,7 @@
 
 		// Handles new connections, the initial conversation, basic packet management, rate limits, and timeouts.
 		// Can wait on more streams than just sockets and/or more sockets.  Useful for waiting on other resources.
-		// 'echo_s' and the 'echo_c_' prefix are reserved.
+		// 'gs_s' and the 'gs_c_' prefix are reserved.
 		// Returns an array of clients that may need more processing.
 		public function Wait($timeout = false, $readfps = array(), $writefps = array(), $exceptfps = NULL)
 		{
@@ -317,15 +317,27 @@
 			$result2 = self::FixedStreamSelect($readfps, $writefps, $exceptfps, $timeout);
 			if ($result2 === false)  return array("success" => false, "error" => self::GSTranslate("Wait() failed due to stream_select() failure.  Most likely cause:  Connection failure."), "errorcode" => "stream_select_failed");
 
+			// Return handles that were being waited on.
+			$result["readfps"] = $readfps;
+			$result["writefps"] = $writefps;
+			$result["exceptfps"] = $exceptfps;
+
+			$this->ProcessWaitResult($result);
+
+			return $result;
+		}
+
+		protected function ProcessWaitResult(&$result)
+		{
 			// Handle new connections.
-			$this->HandleNewConnections($readfps, $writefps);
+			$this->HandleNewConnections($result["readfps"], $result["writefps"]);
 
 			// Handle clients in the read queue.
-			foreach ($readfps as $cid => $fp)
+			foreach ($result["readfps"] as $cid => $fp)
 			{
-				if (!is_string($cid) || strlen($cid) < 8 || substr($cid, 0, 7) !== "echo_c_")  continue;
+				if (!is_string($cid) || strlen($cid) < 6 || substr($cid, 0, 5) !== "gs_c_")  continue;
 
-				$id = (int)substr($cid, 7);
+				$id = (int)substr($cid, 5);
 
 				if (!isset($this->clients[$id]))  continue;
 
@@ -348,15 +360,15 @@
 					$this->RemoveClient($id);
 				}
 
-				unset($readfps[$cid]);
+				unset($result["readfps"][$cid]);
 			}
 
 			// Handle clients in the write queue.
-			foreach ($writefps as $cid => $fp)
+			foreach ($result["writefps"] as $cid => $fp)
 			{
-				if (!is_string($cid) || strlen($cid) < 6 || substr($cid, 0, 7) !== "echo_c_")  continue;
+				if (!is_string($cid) || strlen($cid) < 6 || substr($cid, 0, 5) !== "gs_c_")  continue;
 
-				$id = (int)substr($cid, 7);
+				$id = (int)substr($cid, 5);
 
 				if (!isset($this->clients[$id]))  continue;
 
@@ -379,7 +391,7 @@
 					$this->RemoveClient($id);
 				}
 
-				unset($writefps[$cid]);
+				unset($result["writefps"][$cid]);
 			}
 
 			// Initialize new clients.
@@ -423,31 +435,38 @@
 
 			// Handle client timeouts.
 			$ts = microtime(true);
-			foreach ($this->clients as $id => $client)
+			if ($this->lasttimeoutcheck <= $ts - 5)
 			{
-				if ($client->lastts + $this->defaultclienttimeout < $ts)
+				foreach ($this->clients as $id => $client)
 				{
-					if ($this->debug)  echo "Client ID " . $id . " timed out.  Removing.\n";
+					if ($client->lastts + $this->defaultclienttimeout < $ts)
+					{
+						if ($this->debug)  echo "Client ID " . $id . " timed out.  Removing.\n";
 
-					$result2 = array("success" => false, "error" => self::GSTranslate("Client timed out.  Most likely cause:  Connection failure."), "errorcode" => "client_timeout");
+						$result2 = array("success" => false, "error" => self::GSTranslate("Client timed out.  Most likely cause:  Connection failure."), "errorcode" => "client_timeout");
 
-					$result["removed"][$id] = array("result" => $result2, "client" => $client);
+						$result["removed"][$id] = array("result" => $result2, "client" => $client);
 
-					$this->RemoveClient($id);
+						$this->RemoveClient($id);
+					}
 				}
+
+				$this->lasttimeoutcheck = $ts;
 			}
-
-			// Return any extra handles that were being waited on.
-			$result["readfps"] = $readfps;
-			$result["writefps"] = $writefps;
-			$result["exceptfps"] = $exceptfps;
-
-			return $result;
 		}
 
 		public function GetClients()
 		{
 			return $this->clients;
+		}
+
+		public function NumClients()
+		{
+			return count($this->clients);
+		}
+
+		public function UpdateClientState($id)
+		{
 		}
 
 		public function GetClient($id)

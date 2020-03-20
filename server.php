@@ -276,7 +276,7 @@
 	$freqmap = json_decode(file_get_contents($rootpath . "/support/en_us_freq_3.json"), true);
 
 	// Start the server.
-	echo "Starting server" . (LibEvWebSocketServer::IsSupported() ? " with PECL libev support" : "") . "...\n";
+	echo "Starting server" . (LibEvGenericServer::IsSupported() ? " with PECL libev support" : "") . "...\n";
 	$gs = (LibEvGenericServer::IsSupported() ? new LibEvGenericServer() : new GenericServer());
 //	$gs->SetDebug(true);
 	$result = $gs->Start("127.0.0.1", 24276);
