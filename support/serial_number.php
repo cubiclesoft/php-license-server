@@ -1,6 +1,6 @@
 <?php
 	// Serial number generator/validator.
-	// (C) 2019 CubicleSoft.  All Rights Reserved.
+	// (C) 2020 CubicleSoft.  All Rights Reserved.
 
 	class SerialNumber
 	{
@@ -86,26 +86,26 @@
 			// Encode step.  5-bit groups with 2x pattern, mapped to letters, hyphen every 4 characters:
 			// 12345 67812 34567 81234
 			// 56781 23456 78123 45678
-			$serial2 = $options["encode_chars"]{(($serial[0] >> 3) & 0x1F)};
-			$serial2 .= $options["encode_chars"]{((($serial[0] & 0x07) << 2) | (($serial[1] >> 6) & 0x03))};
-			$serial2 .= $options["encode_chars"]{(($serial[1] >> 1) & 0x1F)};
-			$serial2 .= $options["encode_chars"]{((($serial[1] & 0x01) << 4) | (($serial[2] >> 4) & 0x0F))};
+			$serial2 = $options["encode_chars"][(($serial[0] >> 3) & 0x1F)];
+			$serial2 .= $options["encode_chars"][((($serial[0] & 0x07) << 2) | (($serial[1] >> 6) & 0x03))];
+			$serial2 .= $options["encode_chars"][(($serial[1] >> 1) & 0x1F)];
+			$serial2 .= $options["encode_chars"][((($serial[1] & 0x01) << 4) | (($serial[2] >> 4) & 0x0F))];
 			$serial2 .= "-";
-			$serial2 .= $options["encode_chars"]{((($serial[2] & 0x0F) << 1) | (($serial[3] >> 7) & 0x01))};
-			$serial2 .= $options["encode_chars"]{(($serial[3] >> 2) & 0x1F)};
-			$serial2 .= $options["encode_chars"]{((($serial[3] & 0x03) << 3) | (($serial[4] >> 5) & 0x07))};
-			$serial2 .= $options["encode_chars"]{($serial[4] & 0x1F)};
+			$serial2 .= $options["encode_chars"][((($serial[2] & 0x0F) << 1) | (($serial[3] >> 7) & 0x01))];
+			$serial2 .= $options["encode_chars"][(($serial[3] >> 2) & 0x1F)];
+			$serial2 .= $options["encode_chars"][((($serial[3] & 0x03) << 3) | (($serial[4] >> 5) & 0x07))];
+			$serial2 .= $options["encode_chars"][($serial[4] & 0x1F)];
 			$serial2 .= "-";
 
-			$serial2 .= $options["encode_chars"]{(($serial[5] >> 3) & 0x1F)};
-			$serial2 .= $options["encode_chars"]{((($serial[5] & 0x07) << 2) | (($serial[6] >> 6) & 0x03))};
-			$serial2 .= $options["encode_chars"]{(($serial[6] >> 1) & 0x1F)};
-			$serial2 .= $options["encode_chars"]{((($serial[6] & 0x01) << 4) | (($serial[7] >> 4) & 0x0F))};
+			$serial2 .= $options["encode_chars"][(($serial[5] >> 3) & 0x1F)];
+			$serial2 .= $options["encode_chars"][((($serial[5] & 0x07) << 2) | (($serial[6] >> 6) & 0x03))];
+			$serial2 .= $options["encode_chars"][(($serial[6] >> 1) & 0x1F)];
+			$serial2 .= $options["encode_chars"][((($serial[6] & 0x01) << 4) | (($serial[7] >> 4) & 0x0F))];
 			$serial2 .= "-";
-			$serial2 .= $options["encode_chars"]{((($serial[7] & 0x0F) << 1) | (($serial[8] >> 7) & 0x01))};
-			$serial2 .= $options["encode_chars"]{(($serial[8] >> 2) & 0x1F)};
-			$serial2 .= $options["encode_chars"]{((($serial[8] & 0x03) << 3) | (($serial[9] >> 5) & 0x07))};
-			$serial2 .= $options["encode_chars"]{($serial[9] & 0x1F)};
+			$serial2 .= $options["encode_chars"][((($serial[7] & 0x0F) << 1) | (($serial[8] >> 7) & 0x01))];
+			$serial2 .= $options["encode_chars"][(($serial[8] >> 2) & 0x1F)];
+			$serial2 .= $options["encode_chars"][((($serial[8] & 0x03) << 3) | (($serial[9] >> 5) & 0x07))];
+			$serial2 .= $options["encode_chars"][($serial[9] & 0x1F)];
 
 			return array("success" => true, "serial" => $serial2);
 		}
@@ -117,7 +117,7 @@
 			if (!isset($options["decode_chars"]) || !is_string($options["decode_chars"]) || strlen($options["decode_chars"]) < 32)  $options["decode_chars"] = "abcdefghijkmnpqrstuvwxyz23456789";
 
 			$charmap = array();
-			for ($x = 0; $x < 32; $x++)  $charmap[$options["decode_chars"]{$x}] = $x;
+			for ($x = 0; $x < 32; $x++)  $charmap[$options["decode_chars"][$x]] = $x;
 			if (count($charmap) != 32)  return array("success" => false, "error" => self::SNTranslate("Invalid decoding character list.  Expected 32 unique characters."), "errorcode" => "invalid_decode_chars");
 
 			// Decode step.
@@ -126,10 +126,10 @@
 			$y = strlen($serial);
 			for ($x = 0; $x < $y; $x++)
 			{
-				if (isset($charmap[$serial{$x}]))
+				if (isset($charmap[$serial[$x]]))
 				{
-					$origserial[] = $serial{$x};
-					$serial2[] = $charmap[$serial{$x}];
+					$origserial[] = $serial[$x];
+					$serial2[] = $charmap[$serial[$x]];
 				}
 			}
 
