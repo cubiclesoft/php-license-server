@@ -5,6 +5,8 @@ A high-performance license server system service for creating and managing produ
 
 For when you need a robust license server but want to just get back to writing software.
 
+[![CubicleSoft Software License Server Overview/Intro video](https://user-images.githubusercontent.com/1432111/77229703-99c91480-6b4c-11ea-96fb-16b477486a67.png)](https://www.youtube.com/watch?v=WtVs9I0bxnU "CubicleSoft Software License Server Overview/Intro")
+
 See it in action:
 
 * [License Server Demo/Test Site](https://license-server-demo.cubiclesoft.com/)
