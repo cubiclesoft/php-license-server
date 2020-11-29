@@ -12,7 +12,7 @@ See it in action:
 * [License Server Demo/Test Site](https://license-server-demo.cubiclesoft.com/)
 * [File Tracker](https://file-tracker.cubiclesoft.com/)
 
-[![Donate](https://cubiclesoft.com/res/donate-shield.png)](https://cubiclesoft.com/donate/)
+[![Donate](https://cubiclesoft.com/res/donate-shield.png)](https://cubiclesoft.com/donate/) [![Discord](https://img.shields.io/discord/777282089980526602?label=chat&logo=discord)](https://cubiclesoft.com/product-support/github/)
 
 Features
 --------
