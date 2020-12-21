@@ -26,9 +26,29 @@
 
 		if ($argv[1] == "install")
 		{
+			// Verify root on *NIX.
+			if (function_exists("posix_geteuid"))
+			{
+				$uid = posix_geteuid();
+				if ($uid !== 0)  CLI::DisplayError("The installer must be run as the 'root' user (UID = 0) to install the system service on *NIX hosts.");
+
+				// Create the system user/group.
+				ob_start();
+				system("useradd -r -s /bin/false " . escapeshellarg("php-license-server"));
+				$output = ob_get_contents() . "\n";
+				ob_end_clean();
+			}
+
+			// Make sure the database is readable by the user.
+			@chmod($rootpath . "/license.db", 0664);
+			if (function_exists("posix_geteuid"))  @chgrp($rootpath . "/license.db", "php-license-server");
+
 			// Install the service.
 			$args = array();
-			$options = array();
+			$options = array(
+				"nixuser" => "php-license-server",
+				"nixgroup" => "php-license-server"
+			);
 
 			$result = $sm->Install($servicename, __FILE__, $args, $options, true);
 			if (!$result["success"])  CLI::DisplayError("Unable to install the '" . $servicename . "' service.", $result);
