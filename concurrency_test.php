@@ -1,6 +1,6 @@
 <?php
 	// License server concurrency testing module.  Requires PHP concurrency tester.
-	// (C) 2019 CubicleSoft.  All Rights Reserved.
+	// (C) 2021 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -11,7 +11,7 @@
 
 	if ($argc < 2)
 	{
-		echo "Syntax:  test.php StartAtTimestamp\n\n";
+		echo "Syntax:  concurrency_test.php StartAtTimestamp\n\n";
 
 		echo "This program is usually run via PHP concurrency tester.  Running tests as a single process, please wait...\n\n";
 
