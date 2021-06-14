@@ -1177,7 +1177,7 @@
 									"WHERE" => "r.lid = l.id AND l.pid = ?"
 								), $pid);
 
-								while ($row = $result->NextRow())
+								while ($row = $result3->NextRow())
 								{
 									$lids[] = $row->id;
 								}
