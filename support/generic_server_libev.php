@@ -67,7 +67,7 @@
 
 		public function Wait($timeout = false, $readfps = array(), $writefps = array(), $exceptfps = NULL)
 		{
-			if ($timeout === false || $timeout > $this->defaultkeepalive)  $timeout = $this->defaultkeepalive;
+			if ($timeout === false || $timeout > $this->defaulttimeout)  $timeout = $this->defaulttimeout;
 
 			if ($timeout > 1 && count($this->initclients))  $timeout = 1;
 
