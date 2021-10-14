@@ -5,7 +5,7 @@
 	class SerialNumber
 	{
 		// Generates a 16 character alphanumeric serial number with encrypted product info.
-		static public function Generate($productid, $majorver, $userinfo, $options)
+		public static function Generate($productid, $majorver, $userinfo, $options)
 		{
 			if (!isset($options["expires"]) || !is_bool($options["expires"]))  $options["expires"] = false;
 			if (!isset($options["date"]) || !is_int($options["date"]))  $options["date"] = time();
@@ -110,7 +110,7 @@
 			return array("success" => true, "serial" => $serial2);
 		}
 
-		static public function Verify($serial, $productid = -1, $majorver = -1, $userinfo = false, $options = array())
+		public static function Verify($serial, $productid = -1, $majorver = -1, $userinfo = false, $options = array())
 		{
 			if (!is_string($serial))  return array("success" => false, "error" => self::SNTranslate("Invalid serial number format.  Expected a string."), "errorcode" => "invalid_serial_format");
 			if (isset($options["encode_chars"]))  $options["decode_chars"] = $options["encode_chars"];
