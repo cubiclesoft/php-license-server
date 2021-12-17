@@ -40,6 +40,9 @@
 			}
 
 			// Make sure the database is readable by the user.
+			@chmod($rootpath, 0775);
+			if (function_exists("posix_geteuid"))  @chgrp($rootpath, "php-license-server");
+
 			@chmod($rootpath . "/license.db", 0664);
 			if (function_exists("posix_geteuid"))  @chgrp($rootpath . "/license.db", "php-license-server");
 
