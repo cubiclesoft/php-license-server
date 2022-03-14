@@ -272,7 +272,7 @@
 			$reason = CLI::GetUserInputWithArgs($args, "reason", "Revoke reason", false, "", $suppressoutput);
 
 			ManageConnection();
-			CLI::DisplayResult($lsrv->RevokeLicense($license["serial_num"], $license["pid"], $license["major_ver"], $license["userinfo"], $reason));
+			CLI::DisplayResult($lsrv->RevokeLicense($license["serial_num"], $license["product_id"], $license["major_ver"], $license["userinfo"], $reason));
 		}
 		else if ($api === "restore")
 		{
