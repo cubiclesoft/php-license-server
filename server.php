@@ -1,6 +1,6 @@
 <?php
 	// PHP-based License Server.
-	// (C) 2020 CubicleSoft.  All Rights Reserved.
+	// (C) 2022 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -792,6 +792,11 @@
 								$sqlwhere[] = "pid = ? AND major_ver = ?";
 								$sqlvars[] = (int)$data["pid"];
 								$sqlvars[] = (int)$data["ver"];
+							}
+							else if (isset($data["pid"]))
+							{
+								$sqlwhere[] = "pid = ?";
+								$sqlvars[] = (int)$data["pid"];
 							}
 
 							if (!count($sqlwhere))  $result2 = array("success" => true, "error" => "Invalid or incomplete search query specified.  Must be restricted to a specific serial number, product ID and major version, and/or user info.", "errorcode" => "invalid_search_query");
